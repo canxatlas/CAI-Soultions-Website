@@ -36,7 +36,6 @@ const Navbar = () => {
 
           <div className="hidden md:flex items-center space-x-8">
             <NavLink href="#solutions">Solutions</NavLink>
-
             <NavLink href="#features">Features</NavLink>
             <NavLink href="#demo">Demo</NavLink>
             <NavLink href="#contact">Contact</NavLink>
