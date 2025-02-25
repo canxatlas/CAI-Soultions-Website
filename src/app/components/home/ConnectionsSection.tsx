@@ -90,12 +90,21 @@ export function ConnectionsSection() {
         >
           <div className="flex size-full max-w-lg flex-row items-stretch justify-between gap-10">
             <div className="flex flex-col justify-center">
-              <Circle ref={(el) => (circleRefs.current[6] = el)}>
+              <Circle
+                ref={(el) => {
+                  circleRefs.current[6] = el;
+                }}
+              >
                 <Icons.user size={22} />
               </Circle>
             </div>
             <div className="flex flex-col justify-center">
-              <Circle ref={(el) => (circleRefs.current[5] = el)} size={16}>
+              <Circle
+                ref={(el) => {
+                  circleRefs.current[5] = el;
+                }}
+                size={16}
+              >
                 <Icons.openai size={22} />
               </Circle>
             </div>
@@ -109,7 +118,9 @@ export function ConnectionsSection() {
               ].map((Icon, index) => (
                 <Circle
                   key={index}
-                  ref={(el) => (circleRefs.current[index] = el)}
+                  ref={(el) => {
+                    circleRefs.current[index] = el;
+                  }}
                 >
                   {Icon}
                 </Circle>
@@ -122,8 +133,8 @@ export function ConnectionsSection() {
               <AnimatedBeam
                 key={index}
                 containerRef={containerRef}
-                fromRef={{ current: circleRefs.current[from] }}
-                toRef={{ current: circleRefs.current[to] }}
+                fromRef={{ current: circleRefs.current[from]! }}
+                toRef={{ current: circleRefs.current[to]! }}
                 duration={duration}
                 startDelay={startDelay}
                 curvature={curvature}
