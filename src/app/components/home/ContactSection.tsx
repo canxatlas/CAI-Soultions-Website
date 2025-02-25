@@ -73,7 +73,7 @@ const ContactSection = () => {
                 transition={{ duration: 0.5, delay: 0.2 }}
               >
                 <h2 className="text-4xl font-bold tracking-tight text-white sm:text-5xl">
-                  Let's Build Something Amazing Together
+                  Let&apos;s Build Something Amazing Together
                 </h2>
                 <p className="mt-4 text-xl text-gray-400 leading-relaxed">
                   Ready to transform your customer service? Get in touch with

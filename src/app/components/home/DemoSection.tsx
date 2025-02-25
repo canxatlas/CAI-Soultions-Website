@@ -206,7 +206,6 @@ const DemoSection = () => {
   const [activeDemo, setActiveDemo] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const soundRef = useRef<Howl | null>(null);
-  const [hoveredMessage, setHoveredMessage] = useState<number | null>(null);
 
   const playAudio = (audioSrc: string) => {
     if (soundRef.current) {

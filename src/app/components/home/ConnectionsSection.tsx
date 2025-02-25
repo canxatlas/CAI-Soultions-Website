@@ -2,7 +2,7 @@
 
 import React, { forwardRef, useRef } from 'react';
 import { cn } from '@/lib/utils';
-import { AnimatedBeam } from '@/components/ui/animated-beam';
+import { AnimatedBeam } from '@/components/magicui/animated-beam';
 import { Icons } from '@/components/ui/icons';
 
 interface CircleProps {
@@ -30,44 +30,19 @@ const Circle = React.memo(
   )
 );
 
-interface FeatureCardProps {
-  title: string;
-  description: string;
-}
+Circle.displayName = 'Circle';
 
-const FeatureCard = React.memo(({ title, description }: FeatureCardProps) => (
-  <div className="rounded-xl border border-gray-800 bg-gray-900/50 p-6 backdrop-blur-sm">
-    <h3 className="mb-3 text-xl font-semibold text-white">{title}</h3>
-    <p className="text-gray-400">{description}</p>
-  </div>
-));
-
-export function ConnectionsSection() {
+export const ConnectionsSection = () => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const circleRefs = useRef<Array<HTMLDivElement | null>>(Array(7).fill(null));
+  const circleRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   const connections = [
-    { from: 5, to: 0, duration: 1.8, startDelay: 0.2, curvature: 0.2 }, // AI to Notion
-    { from: 5, to: 1, duration: 1.8, startDelay: 0.4, curvature: -0.1 }, // AI to Google Drive
-    { from: 5, to: 2, duration: 1.8, startDelay: 0.6, curvature: -0.15 }, // AI to Google Docs
-    { from: 5, to: 3, duration: 1.8, startDelay: 0.8, curvature: 0.1 }, // AI to WhatsApp
-    { from: 5, to: 4, duration: 1.8, startDelay: 1.0, curvature: 0.15 }, // AI to Messenger
-    { from: 6, to: 5, duration: 2.5, startDelay: 1.2, curvature: 0.2 }, // User to AI
-  ];
-
-  const features = [
-    {
-      title: 'Multi-Platform Support',
-      description: 'Seamlessly connect with your favorite apps and services...',
-    },
-    {
-      title: 'Intelligent Automation',
-      description: 'Automate repetitive tasks and workflows...',
-    },
-    {
-      title: 'Real-Time Sync',
-      description: 'Stay in sync across all your connected services...',
-    },
+    { from: 5, to: 0, duration: 1.8, startDelay: 0.2, curvature: 0.2 },
+    { from: 5, to: 1, duration: 1.8, startDelay: 0.4, curvature: -0.1 },
+    { from: 5, to: 2, duration: 1.8, startDelay: 0.6, curvature: -0.15 },
+    { from: 5, to: 3, duration: 1.8, startDelay: 0.8, curvature: 0.1 },
+    { from: 5, to: 4, duration: 1.8, startDelay: 1.0, curvature: 0.15 },
+    { from: 6, to: 5, duration: 2.5, startDelay: 1.2, curvature: 0.2 },
   ];
 
   return (
@@ -128,32 +103,35 @@ export function ConnectionsSection() {
             </div>
           </div>
 
-          {connections.map(
-            ({ from, to, duration, startDelay, curvature }, index) => (
+          {connections.map(({ from, to, duration, startDelay, curvature }) => {
+            const fromElement = circleRefs.current[from];
+            const toElement = circleRefs.current[to];
+
+            if (!fromElement || !toElement) return null;
+
+            return (
               <AnimatedBeam
-                key={index}
+                key={`${from}-${to}`}
                 containerRef={containerRef}
-                fromRef={{ current: circleRefs.current[from]! }}
-                toRef={{ current: circleRefs.current[to]! }}
+                fromRef={{ current: fromElement }}
+                toRef={{ current: toElement }}
                 duration={duration}
-                startDelay={startDelay}
+                delay={startDelay}
                 curvature={curvature}
-                strokeWidth={2}
-                gradientStartColor="#6366f1" // indigo-500
-                gradientEndColor="#ec4899" // pink-500
+                pathWidth={2}
+                gradientStartColor="#6366f1"
+                gradientStopColor="#ec4899"
                 pathOpacity={0.6}
-                pulseIntensity={0.8}
               />
-            )
-          )}
+            );
+          })}
         </div>
 
-        <div className="flex justify-center ">
+        <div className="flex justify-center">
           <button
             className="rounded-full bg-gradient-to-r from-purple-600 to-blue-500 px-8 py-3 text-lg font-semibold text-white shadow-sm hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
             onClick={() => {
-              // Add your button click handler here
-              console.log('Get Started clicked');
+              window.location.href = '#contact';
             }}
           >
             Contact Us
@@ -165,4 +143,4 @@ export function ConnectionsSection() {
       <div className="absolute inset-0 bg-gradient-to-b from-black via-purple-900/20 to-black" />
     </section>
   );
-}
+};

@@ -8,7 +8,8 @@ const HeroSection = () => {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!containerRef.current) return;
+    const container = containerRef.current;
+    if (!container) return;
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(
@@ -19,7 +20,7 @@ const HeroSection = () => {
     );
     const renderer = new THREE.WebGLRenderer({ alpha: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    containerRef.current.appendChild(renderer.domElement);
+    container.appendChild(renderer.domElement);
 
     // Add dark background
     scene.background = new THREE.Color(0x0a0a0a);
@@ -56,7 +57,9 @@ const HeroSection = () => {
 
     return () => {
       window.removeEventListener('resize', handleResize);
-      containerRef.current?.removeChild(renderer.domElement);
+      if (container) {
+        container.removeChild(renderer.domElement);
+      }
     };
   }, []);
 

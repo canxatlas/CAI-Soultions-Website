@@ -165,7 +165,7 @@ const PricingSection = () => {
           transition={{ duration: 0.7, delay: 0.3 }}
           className="mt-24 grid grid-cols-1 gap-10 lg:grid-cols-3 lg:gap-12"
         >
-          {plans.map((plan, index) => (
+          {plans.map((plan) => (
             <motion.div
               key={plan.name}
               whileHover={{ scale: 1.02, translateY: -8 }}
@@ -264,9 +264,8 @@ const PricingSection = () => {
                 Need a Custom Solution?
               </h3>
               <p className="text-gray-400 text-lg max-w-2xl mx-auto mb-10">
-                Our team will work with you to create a tailored plan that
-                perfectly fits your organization's needs and budget. Let's
-                discuss how we can help you achieve your goals.
+                Let&apos;s discuss your needs and find the perfect solution for
+                your business.
               </p>
               <motion.a
                 whileHover={{

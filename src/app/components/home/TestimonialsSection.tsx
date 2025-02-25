@@ -8,8 +8,7 @@ import Image from 'next/image';
 const testimonials = [
   {
     id: 1,
-    quote:
-      "SamanthaAI has revolutionized our customer service. The AI agents are incredibly natural in conversation, and we've seen a 40% reduction in response times. Our customers often can't tell they're talking to an AI!",
+    quote: `SamanthaAI has revolutionized our customer service. The AI agents are incredibly natural in conversation, and we've seen a 40% reduction in response times. Our customers often can't tell they're talking to an AI!`,
     author: 'Sarah Johnson',
     position: 'Customer Service Director',
     company: 'TechCorp Solutions',
@@ -23,8 +22,7 @@ const testimonials = [
   },
   {
     id: 2,
-    quote:
-      "The integration was seamless, and the results were immediate. We've automated 75% of our routine customer inquiries, allowing our team to focus on complex cases. The ROI has been exceptional.",
+    quote: `The integration was seamless, and the results were immediate. We've automated 75% of our routine customer inquiries, allowing our team to focus on complex cases. The ROI has been exceptional.`,
     author: 'Michael Chen',
     position: 'Operations Manager',
     company: 'Global Retail Inc.',
@@ -38,8 +36,7 @@ const testimonials = [
   },
   {
     id: 3,
-    quote:
-      'The analytics and insights provided by SamanthaAI have transformed how we understand customer needs. The AI continuously learns and improves, making our service better every day.',
+    quote: `The analytics and insights provided by SamanthaAI have transformed how we understand customer needs. The AI continuously learns and improves, making our service better every day.`,
     author: 'Emily Rodriguez',
     position: 'Head of Innovation',
     company: 'Future Finance',

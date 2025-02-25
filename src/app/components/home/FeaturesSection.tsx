@@ -142,7 +142,8 @@ const FeaturesSection = () => {
   });
 
   useEffect(() => {
-    if (!containerRef.current) return;
+    const container = containerRef.current;
+    if (!container) return;
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(
@@ -153,7 +154,7 @@ const FeaturesSection = () => {
     );
     const renderer = new THREE.WebGLRenderer({ alpha: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    containerRef.current.appendChild(renderer.domElement);
+    container.appendChild(renderer.domElement);
 
     // Create multiple toruses with different sizes and positions
     const toruses = [
@@ -213,12 +214,14 @@ const FeaturesSection = () => {
     window.addEventListener('resize', handleResize);
 
     return () => {
-      window.removeEventListener('resize', handleResize);
-      containerRef.current?.removeChild(renderer.domElement);
-      meshes.forEach(({ mesh }) => {
-        mesh.geometry.dispose();
-        (mesh.material as THREE.Material).dispose();
-      });
+      if (container) {
+        window.removeEventListener('resize', handleResize);
+        container.removeChild(renderer.domElement);
+        meshes.forEach(({ mesh }) => {
+          mesh.geometry.dispose();
+          (mesh.material as THREE.Material).dispose();
+        });
+      }
     };
   }, []);
 
@@ -283,7 +286,7 @@ const FeaturesSection = () => {
           animate={inView ? 'visible' : 'hidden'}
           className="mt-8 sm:mt-10 grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3"
         >
-          {features.map((feature, index) => (
+          {features.map((feature) => (
             <motion.div
               key={feature.title}
               variants={itemVariants}
