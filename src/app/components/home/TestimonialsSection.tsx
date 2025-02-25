@@ -135,7 +135,7 @@ const TestimonialsSection = () => {
                     </div>
                   </div>
                   <blockquote className="mt-10 text-xl leading-relaxed text-gray-300">
-                    "{currentTestimonial.quote}"
+                    &ldquo;{currentTestimonial.quote}&rdquo;
                   </blockquote>
                 </div>
               </div>

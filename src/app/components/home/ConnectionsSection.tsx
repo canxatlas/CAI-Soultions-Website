@@ -34,7 +34,7 @@ Circle.displayName = 'Circle';
 
 export const ConnectionsSection = () => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const circleRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const circleRefs = useRef<Array<HTMLDivElement | null>>([]);
 
   const connections = [
     { from: 5, to: 0, duration: 1.8, startDelay: 0.2, curvature: 0.2 },
