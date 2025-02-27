@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const PricingEstimator = () => {
@@ -210,8 +210,8 @@ export const PricingEstimator = () => {
                   transition={{ delay: 0.2 }}
                   className="text-gray-300"
                 >
-                  You've reached our enterprise threshold! Let's create a custom
-                  solution for your high-volume needs with:
+                  You&apos;ve reached our enterprise threshold! Let&apos;s
+                  create a custom solution for your high-volume needs with:
                 </motion.p>
                 <motion.ul
                   initial={{ y: 10, opacity: 0 }}
