@@ -22,7 +22,7 @@ export const PricingEstimator = () => {
     // Volume discounts
     if (minutes > 5000) {
       pricePerMinute = 0.9; // 10% discount for medium volume
-    } else if (minutes > 1000) {
+    } else if (minutes > 3000) {
       pricePerMinute = 0.95; // 5% discount for small volume
     }
 
@@ -132,7 +132,7 @@ export const PricingEstimator = () => {
                 Growth Plan
               </div>
               <div className="text-white text-2xl font-bold">$0.95/min</div>
-              <div className="text-gray-400 mt-2">1,000+ minutes</div>
+              <div className="text-gray-400 mt-2">3,000+ minutes</div>
             </motion.div>
             <motion.div
               whileHover={{ scale: 1.02 }}
