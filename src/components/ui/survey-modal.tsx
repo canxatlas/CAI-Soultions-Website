@@ -168,10 +168,18 @@ export const SurveyModal = ({ isOpen, onClose }: SurveyModalProps) => {
         onClose();
       } else {
         setIsSubmitting(false);
+        setSubmitError(
+          result.error ||
+            'An error occurred while submitting the survey. Please try again.'
+        );
         // Handle error here if needed
       }
-    } catch {
+    } catch (error) {
+      console.error('Error submitting survey:', error);
       setIsSubmitting(false);
+      setSubmitError(
+        'An error occurred while submitting the survey. Please try again.'
+      );
       // Handle error here if needed
     }
   };
