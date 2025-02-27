@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
+import { GHLApi } from '@/lib/ghl-api';
 
 const ContactSection = () => {
   const [formState, setFormState] = useState({
@@ -14,6 +15,7 @@ const ContactSection = () => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const [ref, inView] = useInView({
     triggerOnce: true,
@@ -23,21 +25,53 @@ const ContactSection = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setError(null);
 
-    // Simulate form submission
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    try {
+      // Split name into first and last name
+      const nameParts = formState.name.trim().split(/\s+/);
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
 
-    setIsSubmitting(false);
-    setSubmitted(true);
-    setFormState({
-      name: '',
-      email: '',
-      company: '',
-      message: '',
-    });
+      // Create contact and add note
+      const result = await GHLApi.submitSurvey(
+        {
+          firstName,
+          lastName,
+          email: formState.email,
+          companyName: formState.company,
+        },
+        {
+          role: 'Website Contact',
+          companySize: 'Unknown',
+          useCase: formState.message,
+          budget: 'Unknown',
+          timeline: 'Unknown',
+        }
+      );
 
-    // Reset success message after 3 seconds
-    setTimeout(() => setSubmitted(false), 3000);
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to submit contact form');
+      }
+
+      setSubmitted(true);
+      setFormState({
+        name: '',
+        email: '',
+        company: '',
+        message: '',
+      });
+
+      // Reset success message after 3 seconds
+      setTimeout(() => setSubmitted(false), 3000);
+    } catch (err) {
+      console.error('Error submitting contact form:', err);
+      setError(
+        err instanceof Error ? err.message : 'Failed to submit contact form'
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleChange = (
@@ -307,6 +341,31 @@ const ContactSection = () => {
                       />
                     </svg>
                     Message sent successfully!
+                  </div>
+                </motion.div>
+              )}
+
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="absolute inset-x-0 -bottom-20 text-center"
+                >
+                  <div className="inline-flex items-center rounded-full bg-red-500/10 px-6 py-3 text-red-400">
+                    <svg
+                      className="mr-2 size-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    {error}
                   </div>
                 </motion.div>
               )}

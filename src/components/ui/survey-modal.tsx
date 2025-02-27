@@ -2,141 +2,143 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { GHLApi } from '@/lib/ghl-api';
+
+export interface EstimationResult {
+  minutesPerMonth: number;
+  costPerMonth: number;
+  agentsNeeded: number;
+}
 
 interface SurveyModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-interface EstimationResult {
-  minutesPerMonth: number;
-  costPerMonth: number;
-  agentsNeeded: number;
+interface ContactInfo {
+  firstName: string;
+  lastName: string;
+  email: string;
+  companyName: string;
+  phone: string;
 }
 
 export const SurveyModal = ({ isOpen, onClose }: SurveyModalProps) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState({
-    callsPerDay: '',
-    avgCallDuration: '',
-    operatingHours: '',
-    peakHourFactor: '',
-    serviceLevel: '',
+    role: '',
+    companySize: '',
+    useCase: '',
+    budget: '',
+    timeline: '',
   });
-
+  const [contactInfo, setContactInfo] = useState<ContactInfo>({
+    firstName: '',
+    lastName: '',
+    email: '',
+    companyName: '',
+    phone: '',
+  });
   const [estimation, setEstimation] = useState<EstimationResult | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const questions = [
     {
-      title: 'How many customer calls do you handle per day?',
+      title: 'What is your role in the company?',
+      field: 'role',
       options: [
-        'Less than 50 calls',
-        '50-200 calls',
-        '200-500 calls',
-        '500-1000 calls',
-        'More than 1000 calls',
+        'C-Level Executive',
+        'Director/Manager',
+        'Team Lead',
+        'Individual Contributor',
+        'Other',
       ],
-      field: 'callsPerDay',
-      values: [25, 125, 350, 750, 1500],
     },
     {
-      title: 'What is your average call duration?',
-      options: [
-        '1-3 minutes',
-        '3-5 minutes',
-        '5-10 minutes',
-        '10-15 minutes',
-        'More than 15 minutes',
-      ],
-      field: 'avgCallDuration',
-      values: [2, 4, 7.5, 12.5, 20],
+      title: 'How many employees are in your company?',
+      field: 'companySize',
+      options: ['1-10', '11-50', '51-200', '201-1000', '1000+'],
     },
     {
-      title: 'What are your operating hours?',
+      title: 'What is your primary use case?',
+      field: 'useCase',
       options: [
-        'Business hours (8h/day)',
-        'Extended hours (12h/day)',
-        '24/7 operation',
-        'Custom hours',
-        'Not sure yet',
+        'Customer Support',
+        'Sales Outreach',
+        'Lead Generation',
+        'Appointment Scheduling',
+        'Other',
       ],
-      field: 'operatingHours',
-      values: [8, 12, 24, 16, 12],
     },
     {
-      title: 'What is your peak hour call volume compared to average?',
+      title: 'What is your monthly budget range?',
+      field: 'budget',
       options: [
-        '1.5x average',
-        '2x average',
-        '3x average',
-        '4x average',
-        'Not sure',
+        'Under $1,000',
+        '$1,000 - $5,000',
+        '$5,000 - $10,000',
+        '$10,000 - $50,000',
+        '$50,000+',
       ],
-      field: 'peakHourFactor',
-      values: [1.5, 2, 3, 4, 2.5],
     },
     {
-      title: 'What service level are you targeting?',
+      title: 'When are you looking to implement?',
+      field: 'timeline',
       options: [
-        'Basic (80% calls in 30s)',
-        'Standard (90% calls in 20s)',
-        'Premium (95% calls in 10s)',
-        'Custom SLA',
-        'Not sure yet',
+        'Immediately',
+        'Within 1 month',
+        'Within 3 months',
+        'Within 6 months',
+        'Just exploring',
       ],
-      field: 'serviceLevel',
-      values: [1, 1.2, 1.5, 1.3, 1.2],
     },
   ];
 
   const calculateEstimation = (): EstimationResult => {
     const getNumericValue = (field: string, index: number) => {
-      const question = questions.find((q) => q.field === field);
-      return question?.values[index] || 0;
+      const value = formData[field as keyof typeof formData];
+      return (
+        questions.find((q) => q.field === field)?.options.indexOf(value) ??
+        index
+      );
     };
 
     const getIndexForValue = (field: string, value: string) => {
-      const question = questions.find((q) => q.field === field);
-      return question?.options.indexOf(value) || 0;
+      return (
+        questions.find((q) => q.field === field)?.options.indexOf(value) ?? 0
+      );
     };
 
-    // Calculate base metrics
-    const callsPerDay = getNumericValue(
-      'callsPerDay',
-      getIndexForValue('callsPerDay', formData.callsPerDay)
+    // Calculate minutes per month based on company size and use case
+    const companySizeIndex = getIndexForValue(
+      'companySize',
+      formData.companySize
     );
-    const avgDuration = getNumericValue(
-      'avgCallDuration',
-      getIndexForValue('avgCallDuration', formData.avgCallDuration)
-    );
-    const hoursPerDay = getNumericValue(
-      'operatingHours',
-      getIndexForValue('operatingHours', formData.operatingHours)
-    );
-    const peakFactor = getNumericValue(
-      'peakHourFactor',
-      getIndexForValue('peakHourFactor', formData.peakHourFactor)
-    );
-    const serviceLevelFactor = getNumericValue(
-      'serviceLevel',
-      getIndexForValue('serviceLevel', formData.serviceLevel)
-    );
+    const useCaseIndex = getIndexForValue('useCase', formData.useCase);
 
-    // Calculate monthly minutes
-    const minutesPerDay = callsPerDay * avgDuration;
-    const minutesPerMonth = minutesPerDay * 22; // Average business days per month
-    const costPerMonth = minutesPerMonth * 1; // $1 per minute
+    const baseMinutes = (companySizeIndex + 1) * 1000;
+    const useCaseMultiplier = (useCaseIndex + 1) * 0.5;
 
-    // Calculate required agents based on Erlang C formula (simplified)
-    const peakHourCalls = (callsPerDay / hoursPerDay) * peakFactor;
-    const agentsNeeded = Math.ceil(
-      (peakHourCalls * avgDuration * serviceLevelFactor) / 60
-    );
+    const minutesPerMonth = Math.round(baseMinutes * useCaseMultiplier);
+
+    // Calculate cost per month
+    let costPerMinute = 1.0;
+    if (minutesPerMonth > 5000) {
+      costPerMinute = 0.9;
+    } else if (minutesPerMonth > 3000) {
+      costPerMinute = 0.95;
+    }
+
+    const costPerMonth = Math.round(minutesPerMonth * costPerMinute);
+
+    // Estimate number of agents needed
+    const agentsNeeded = Math.ceil(minutesPerMonth / (160 * 60)); // Assuming 160 working hours per month
 
     return {
-      minutesPerMonth: Math.round(minutesPerMonth),
-      costPerMonth: Math.round(costPerMonth),
-      agentsNeeded: agentsNeeded,
+      minutesPerMonth,
+      costPerMonth,
+      agentsNeeded,
     };
   };
 
@@ -145,26 +147,42 @@ export const SurveyModal = ({ isOpen, onClose }: SurveyModalProps) => {
     if (currentStep < questions.length - 1) {
       setCurrentStep((prev) => prev + 1);
     } else {
-      // On last question, calculate estimation
-      const newFormData = { ...formData, [field]: value };
-      setFormData(newFormData);
-      setEstimation(calculateEstimation());
+      const estimationResult = calculateEstimation();
+      setEstimation(estimationResult);
     }
   };
 
+  const handleContactInfoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setContactInfo((prev) => ({ ...prev, [name]: value }));
+  };
+
   const handleSubmit = async () => {
-    console.log('Survey submitted:', formData);
-    console.log('Estimation:', estimation);
-    onClose();
-    setCurrentStep(0);
-    setFormData({
-      callsPerDay: '',
-      avgCallDuration: '',
-      operatingHours: '',
-      peakHourFactor: '',
-      serviceLevel: '',
-    });
-    setEstimation(null);
+    try {
+      setIsSubmitting(true);
+      setSubmitError(null);
+
+      const result = await GHLApi.submitSurvey(
+        {
+          ...contactInfo,
+        },
+        {
+          ...formData,
+          estimation: estimation || undefined,
+        }
+      );
+
+      if (result.success) {
+        onClose();
+        // You might want to show a success message or redirect
+      } else {
+        setSubmitError(result.error || 'Failed to submit survey');
+      }
+    } catch (error) {
+      setSubmitError('An unexpected error occurred');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -175,83 +193,156 @@ export const SurveyModal = ({ isOpen, onClose }: SurveyModalProps) => {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) onClose();
-          }}
         >
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.95, opacity: 0 }}
-            className="relative w-full max-w-2xl overflow-hidden rounded-2xl border border-gray-800 bg-gray-900/90 p-8 shadow-xl backdrop-blur-xl"
+            className="relative w-full max-w-lg overflow-hidden rounded-2xl border border-gray-800 bg-gray-900/90 p-8 shadow-xl backdrop-blur-xl"
           >
-            {/* Progress bar */}
-            <div className="absolute left-0 top-0 h-1 w-full bg-gray-800">
-              <motion.div
-                className="h-full bg-gradient-to-r from-purple-600 to-blue-500"
-                initial={{ width: '0%' }}
-                animate={{
-                  width: `${((currentStep + 1) / questions.length) * 100}%`,
-                }}
-                transition={{ duration: 0.3 }}
-              />
+            <button
+              onClick={onClose}
+              className="absolute right-4 top-4 text-gray-400 hover:text-white"
+            >
+              <svg
+                className="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+
+            <div className="mb-8">
+              <div className="h-1 w-full rounded-full bg-gray-800">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{
+                    width: estimation
+                      ? '100%'
+                      : `${((currentStep + 1) / questions.length) * 100}%`,
+                  }}
+                  className="h-full rounded-full bg-gradient-to-r from-purple-600 to-blue-500"
+                />
+              </div>
             </div>
 
-            <div className="mt-4">
+            <div className="space-y-6">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={currentStep}
-                  initial={{ x: 50, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  exit={{ x: -50, opacity: 0 }}
-                  transition={{ duration: 0.3 }}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  className="space-y-6"
                 >
                   {estimation ? (
-                    // Show estimation results
-                    <div className="text-center">
-                      <h2 className="text-2xl font-bold text-white mb-6">
-                        Your Estimated Costs
-                      </h2>
-                      <div className="grid gap-6">
-                        <div className="rounded-xl border border-gray-700 bg-gray-800/50 p-6">
-                          <p className="text-4xl font-bold text-purple-500">
-                            ${estimation.costPerMonth.toLocaleString()}
-                          </p>
-                          <p className="text-gray-400 mt-2">
-                            Estimated Monthly Cost
-                          </p>
+                    // Contact Information Form
+                    <div className="space-y-6">
+                      <h3 className="text-2xl font-bold text-white">
+                        Almost there! Let us know how to reach you
+                      </h3>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-400">
+                            First Name
+                          </label>
+                          <input
+                            type="text"
+                            name="firstName"
+                            value={contactInfo.firstName}
+                            onChange={handleContactInfoChange}
+                            className="mt-1 block w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-white placeholder-gray-400 focus:border-purple-500 focus:outline-none"
+                            placeholder="John"
+                          />
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="rounded-xl border border-gray-700 bg-gray-800/50 p-4">
-                            <p className="text-2xl font-bold text-blue-500">
-                              {estimation.minutesPerMonth.toLocaleString()}
-                            </p>
-                            <p className="text-gray-400 mt-2">
-                              Minutes per Month
-                            </p>
-                          </div>
-                          <div className="rounded-xl border border-gray-700 bg-gray-800/50 p-4">
-                            <p className="text-2xl font-bold text-blue-500">
-                              {estimation.agentsNeeded}
-                            </p>
-                            <p className="text-gray-400 mt-2">
-                              AI Agents Needed
-                            </p>
-                          </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-400">
+                            Last Name
+                          </label>
+                          <input
+                            type="text"
+                            name="lastName"
+                            value={contactInfo.lastName}
+                            onChange={handleContactInfoChange}
+                            className="mt-1 block w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-white placeholder-gray-400 focus:border-purple-500 focus:outline-none"
+                            placeholder="Doe"
+                          />
                         </div>
-                        <p className="text-sm text-gray-400 mt-4">
-                          This is a base estimation at $1/minute. Contact us for
-                          custom pricing and volume discounts.
-                        </p>
+                        <div className="col-span-2">
+                          <label className="block text-sm font-medium text-gray-400">
+                            Email
+                          </label>
+                          <input
+                            type="email"
+                            name="email"
+                            value={contactInfo.email}
+                            onChange={handleContactInfoChange}
+                            className="mt-1 block w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-white placeholder-gray-400 focus:border-purple-500 focus:outline-none"
+                            placeholder="john@company.com"
+                          />
+                        </div>
+                        <div className="col-span-2">
+                          <label className="block text-sm font-medium text-gray-400">
+                            Company Name
+                          </label>
+                          <input
+                            type="text"
+                            name="companyName"
+                            value={contactInfo.companyName}
+                            onChange={handleContactInfoChange}
+                            className="mt-1 block w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-white placeholder-gray-400 focus:border-purple-500 focus:outline-none"
+                            placeholder="Company Inc."
+                          />
+                        </div>
+                        <div className="col-span-2">
+                          <label className="block text-sm font-medium text-gray-400">
+                            Phone
+                          </label>
+                          <input
+                            type="tel"
+                            name="phone"
+                            value={contactInfo.phone}
+                            onChange={handleContactInfoChange}
+                            className="mt-1 block w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-white placeholder-gray-400 focus:border-purple-500 focus:outline-none"
+                            placeholder="+1 (555) 000-0000"
+                          />
+                        </div>
+                      </div>
+
+                      {submitError && (
+                        <p className="text-sm text-red-500">{submitError}</p>
+                      )}
+
+                      <div className="flex justify-between">
+                        <button
+                          onClick={() => setEstimation(null)}
+                          className="rounded-lg border border-gray-700 bg-gray-800 px-6 py-2 text-white hover:bg-gray-700"
+                        >
+                          Back
+                        </button>
+                        <button
+                          onClick={handleSubmit}
+                          disabled={isSubmitting}
+                          className="rounded-lg bg-gradient-to-r from-purple-600 to-blue-500 px-6 py-2 text-white hover:opacity-90 disabled:opacity-50"
+                        >
+                          {isSubmitting ? 'Submitting...' : 'Submit'}
+                        </button>
                       </div>
                     </div>
                   ) : (
-                    // Show questions
+                    // Survey Questions
                     <>
-                      <h2 className="text-2xl font-bold text-white">
+                      <h3 className="text-2xl font-bold text-white">
                         {questions[currentStep].title}
-                      </h2>
-                      <div className="mt-6 grid gap-4">
+                      </h3>
+                      <div className="space-y-3">
                         {questions[currentStep].options.map((option) => (
                           <motion.button
                             key={option}
@@ -280,42 +371,6 @@ export const SurveyModal = ({ isOpen, onClose }: SurveyModalProps) => {
                   )}
                 </motion.div>
               </AnimatePresence>
-            </div>
-
-            <div className="mt-8 flex justify-between">
-              <button
-                onClick={() => {
-                  if (estimation) {
-                    setEstimation(null);
-                  } else {
-                    setCurrentStep((prev) => Math.max(0, prev - 1));
-                  }
-                }}
-                className={`rounded-full bg-gray-800 px-6 py-2 font-medium text-white transition-opacity hover:bg-gray-700 ${
-                  currentStep === 0 && !estimation ? 'invisible' : ''
-                }`}
-              >
-                {estimation ? 'Back' : 'Previous'}
-              </button>
-              {estimation ? (
-                <button
-                  onClick={handleSubmit}
-                  className="rounded-full bg-gradient-to-r from-purple-600 to-blue-500 px-6 py-2 font-medium text-white shadow-lg shadow-purple-500/20 hover:opacity-90"
-                >
-                  Contact Us
-                </button>
-              ) : (
-                <button
-                  onClick={() => {
-                    if (currentStep === questions.length - 1) {
-                      setEstimation(calculateEstimation());
-                    }
-                  }}
-                  className="rounded-full bg-gradient-to-r from-purple-600 to-blue-500 px-6 py-2 font-medium text-white shadow-lg shadow-purple-500/20 hover:opacity-90"
-                >
-                  {currentStep === questions.length - 1 ? 'Calculate' : 'Skip'}
-                </button>
-              )}
             </div>
           </motion.div>
         </motion.div>
