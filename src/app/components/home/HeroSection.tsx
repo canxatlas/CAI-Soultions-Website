@@ -1,11 +1,13 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import * as THREE from 'three';
+import { SurveyModal } from '@/components/ui/survey-modal';
 
 const HeroSection = () => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [isSurveyOpen, setIsSurveyOpen] = useState(false);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -86,14 +88,14 @@ const HeroSection = () => {
             efficiency.
           </p>
           <div className="mt-10 flex items-center justify-center gap-x-6">
-            <motion.a
+            <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              href="#demo"
+              onClick={() => setIsSurveyOpen(true)}
               className="rounded-full bg-gradient-to-r from-purple-600 to-blue-500 px-8 py-3 text-lg font-semibold text-white shadow-sm hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
             >
-              Try Demo
-            </motion.a>
+              Take Survey
+            </motion.button>
             <motion.a
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -104,6 +106,11 @@ const HeroSection = () => {
             </motion.a>
           </div>
         </motion.div>
+
+        <SurveyModal
+          isOpen={isSurveyOpen}
+          onClose={() => setIsSurveyOpen(false)}
+        />
 
         {/* <div ref={ref} className="mt-16 flow-root sm:mt-24">
           <motion.div
