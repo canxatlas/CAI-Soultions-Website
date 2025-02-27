@@ -4,11 +4,6 @@ import './globals.css';
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
 import { Providers } from './components/layout/Providers';
-import { GHLApi } from '@/lib/ghl-api';
-import { GHL_CONFIG } from '@/lib/ghl-config';
-
-// Initialize GHL API
-GHLApi.initialize(GHL_CONFIG);
 
 const inter = Inter({ subsets: ['latin'] });
 

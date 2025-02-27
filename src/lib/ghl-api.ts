@@ -1,12 +1,5 @@
 import { EstimationResult } from '@/components/ui/survey-modal';
 
-// Runtime configuration interface
-interface GHLConfig {
-  apiKey: string;
-  pipelineId: string;
-  defaultStageId: string;
-}
-
 interface GHLContact {
   email?: string;
   phone?: string;
@@ -57,19 +50,9 @@ interface SurveyData {
 
 export class GHLApi {
   private static baseUrl = 'https://rest.gohighlevel.com/v1';
-  private static config: GHLConfig | null = null;
-
-  // Initialize the API with configuration
-  static initialize(config: GHLConfig) {
-    this.config = config;
-  }
-
-  private static getConfig(): GHLConfig {
-    if (!this.config) {
-      throw new Error('GHLApi not initialized. Call GHLApi.initialize() first.');
-    }
-    return this.config;
-  }
+  private static apiKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2NhdGlvbl9pZCI6IjNJb2w0aXRQVzkyUlFXRDJwbDZoIiwidmVyc2lvbiI6MSwiaWF0IjoxNzQwNjg4ODQzODAzLCJzdWIiOiJzS0xpYlVEQVplMWlDUFkwRlNaSSJ9.2YEvNI5eyL_W60RhVc2On8zIPsbON4WlydQpPRT-aV4";
+  private static pipelineId = "TnrKHZL0ajG2CFppnR94";
+  private static defaultStageId = "8dd6b386-7b4c-471f-89a6-dd8d7f27edaa";
 
   private static async makeRequest<T>(
     endpoint: string, 
@@ -77,8 +60,6 @@ export class GHLApi {
     data?: T
   ) {
     const url = `${this.baseUrl}${endpoint}`;
-    const config = this.getConfig();
-    
     console.log('Making request to:', url);
     console.log('Request data:', data);
 
@@ -87,7 +68,7 @@ export class GHLApi {
         method,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + config.apiKey,
+          'Authorization': 'Bearer ' + this.apiKey || '',
         },
         body: data ? JSON.stringify(data) : undefined,
       });
@@ -146,9 +127,7 @@ export class GHLApi {
   }
 
   static async createOpportunity(opportunity: GHLOpportunity) {
-    const config = this.getConfig();
-    
-    if (!config.pipelineId) {
+    if (!this.pipelineId) {
       throw new Error('Pipeline ID is required');
     }
 
@@ -176,7 +155,7 @@ export class GHLApi {
     console.log('Sending opportunity data:', opportunityData);
 
     return this.makeRequest<GHLOpportunity>(
-      `/pipelines/${config.pipelineId}/opportunities`,
+      `/pipelines/${this.pipelineId}/opportunities`,
       'POST',
       opportunityData
     );
@@ -187,8 +166,6 @@ export class GHLApi {
     surveyData: SurveyData
   ): Promise<{ success: boolean; contactId?: string; opportunityId?: string; error?: string }> {
     try {
-      const config = this.getConfig();
-      
       // Create contact first
       console.log('Creating contact:', contact);
       const contactResponse = await this.createContact(contact);
@@ -226,7 +203,7 @@ Estimated Usage:
       const opportunity: GHLOpportunity = {
         title: `${contact.firstName || ''} ${contact.lastName || ''} - Website Survey`,
         status: 'open',
-        stageId: config.defaultStageId,
+        stageId: this.defaultStageId || '',
         monetaryValue: surveyData.estimation?.costPerMonth || 0,
         source: 'Website Survey',
         contactId: contactResponse.contact.id,
