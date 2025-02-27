@@ -48,25 +48,17 @@ interface SurveyData {
   estimation?: EstimationResult;
 }
 
-// Custom field IDs for the survey
-const CUSTOM_FIELD_IDS = {
-  ROLE: 'role_field_id',
-  COMPANY_SIZE: 'company_size_field_id',
-  USE_CASE: 'use_case_field_id',
-  BUDGET_RANGE: 'budget_range_field_id',
-  IMPLEMENTATION_TIMELINE: 'implementation_timeline_field_id',
-  ESTIMATED_MINUTES: 'estimated_minutes_field_id',
-  ESTIMATED_COST: 'estimated_cost_field_id',
-  ESTIMATED_AGENTS: 'estimated_agents_field_id',
-};
-
 export class GHLApi {
   private static baseUrl = 'https://rest.gohighlevel.com/v1';
   private static apiKey = process.env.NEXT_PUBLIC_GHL_API_KEY;
   private static pipelineId = process.env.NEXT_PUBLIC_GHL_PIPELINE_ID;
   private static defaultStageId = process.env.NEXT_PUBLIC_GHL_DEFAULT_STAGE_ID;
 
-  private static async makeRequest(endpoint: string, method: string, data?: any) {
+  private static async makeRequest<T>(
+    endpoint: string, 
+    method: string, 
+    data?: T
+  ) {
     const url = `${this.baseUrl}${endpoint}`;
     console.log('Making request to:', url);
     console.log('Request data:', data);
@@ -96,7 +88,7 @@ export class GHLApi {
   }
 
   private static async createCustomValue(customValue: GHLCustomValue) {
-    return this.makeRequest(
+    return this.makeRequest<GHLCustomValue>(
       '/custom-values',
       'POST',
       customValue
@@ -104,7 +96,7 @@ export class GHLApi {
   }
 
   private static async createNote(contactId: string, note: GHLNote) {
-    return this.makeRequest(
+    return this.makeRequest<GHLNote>(
       `/contacts/${contactId}/notes/`,
       'POST',
       note
@@ -122,7 +114,7 @@ export class GHLApi {
       contact.name = `${contact.firstName} ${contact.lastName}`;
     }
 
-    return this.makeRequest(
+    return this.makeRequest<GHLContact>(
       '/contacts/',
       'POST',
       {
@@ -162,7 +154,7 @@ export class GHLApi {
 
     console.log('Sending opportunity data:', opportunityData);
 
-    return this.makeRequest(
+    return this.makeRequest<GHLOpportunity>(
       `/pipelines/${this.pipelineId}/opportunities`,
       'POST',
       opportunityData

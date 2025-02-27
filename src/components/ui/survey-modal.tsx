@@ -96,18 +96,12 @@ export const SurveyModal = ({ isOpen, onClose }: SurveyModalProps) => {
   ];
 
   const calculateEstimation = (): EstimationResult => {
-    const getNumericValue = (field: string, index: number) => {
-      const value = formData[field as keyof typeof formData];
-      return (
-        questions.find((q) => q.field === field)?.options.indexOf(value) ??
-        index
-      );
-    };
-
     const getIndexForValue = (field: string, value: string) => {
-      return (
-        questions.find((q) => q.field === field)?.options.indexOf(value) ?? 0
-      );
+      const options = {
+        companySize: ['1-10', '11-50', '51-200', '201-1000', '1000+'],
+        timeline: ['1 month', '3 months', '6 months', '1 year', '2+ years'],
+      };
+      return options[field as keyof typeof options].indexOf(value);
     };
 
     // Calculate minutes per month based on company size and use case
@@ -158,30 +152,27 @@ export const SurveyModal = ({ isOpen, onClose }: SurveyModalProps) => {
   };
 
   const handleSubmit = async () => {
+    setIsSubmitting(true);
     try {
-      setIsSubmitting(true);
-      setSubmitError(null);
-
-      const result = await GHLApi.submitSurvey(
-        {
-          ...contactInfo,
-        },
-        {
-          ...formData,
-          estimation: estimation || undefined,
-        }
-      );
+      const result = await GHLApi.submitSurvey(contactInfo, {
+        role: formData.role,
+        companySize: formData.companySize,
+        useCase: formData.useCase,
+        budget: formData.budget,
+        timeline: formData.timeline,
+        estimation: calculateEstimation(),
+      });
 
       if (result.success) {
+        setIsSubmitting(false);
         onClose();
-        // You might want to show a success message or redirect
       } else {
-        setSubmitError(result.error || 'Failed to submit survey');
+        setIsSubmitting(false);
+        // Handle error here if needed
       }
-    } catch (error) {
-      setSubmitError('An unexpected error occurred');
-    } finally {
+    } catch {
       setIsSubmitting(false);
+      // Handle error here if needed
     }
   };
 
