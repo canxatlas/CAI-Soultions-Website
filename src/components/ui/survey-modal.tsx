@@ -41,7 +41,6 @@ export const SurveyModal = ({ isOpen, onClose }: SurveyModalProps) => {
   });
   const [estimation, setEstimation] = useState<EstimationResult | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const questions = [
     {
@@ -97,11 +96,39 @@ export const SurveyModal = ({ isOpen, onClose }: SurveyModalProps) => {
 
   const calculateEstimation = (): EstimationResult => {
     const getIndexForValue = (field: string, value: string) => {
+      // Map all question fields to their options
       const options = {
+        role: [
+          'C-Level Executive',
+          'Director/Manager',
+          'Team Lead',
+          'Individual Contributor',
+          'Other',
+        ],
         companySize: ['1-10', '11-50', '51-200', '201-1000', '1000+'],
-        timeline: ['1 month', '3 months', '6 months', '1 year', '2+ years'],
+        useCase: [
+          'Customer Support',
+          'Sales Outreach',
+          'Lead Generation',
+          'Appointment Scheduling',
+          'Other',
+        ],
+        budget: [
+          'Under $1,000',
+          '$1,000 - $5,000',
+          '$5,000 - $10,000',
+          '$10,000 - $50,000',
+          '$50,000+',
+        ],
+        timeline: [
+          'Immediately',
+          'Within 1 month',
+          'Within 3 months',
+          'Within 6 months',
+          'Just exploring',
+        ],
       };
-      return options[field as keyof typeof options].indexOf(value);
+      return options[field as keyof typeof options]?.indexOf(value) ?? 0;
     };
 
     // Calculate minutes per month based on company size and use case
@@ -111,12 +138,15 @@ export const SurveyModal = ({ isOpen, onClose }: SurveyModalProps) => {
     );
     const useCaseIndex = getIndexForValue('useCase', formData.useCase);
 
+    // Base calculation on company size
     const baseMinutes = (companySizeIndex + 1) * 1000;
+
+    // Adjust multiplier based on use case
     const useCaseMultiplier = (useCaseIndex + 1) * 0.5;
 
     const minutesPerMonth = Math.round(baseMinutes * useCaseMultiplier);
 
-    // Calculate cost per month
+    // Calculate cost per month with volume discounts
     let costPerMinute = 1.0;
     if (minutesPerMonth > 5000) {
       costPerMinute = 0.9;
@@ -126,8 +156,8 @@ export const SurveyModal = ({ isOpen, onClose }: SurveyModalProps) => {
 
     const costPerMonth = Math.round(minutesPerMonth * costPerMinute);
 
-    // Estimate number of agents needed
-    const agentsNeeded = Math.ceil(minutesPerMonth / (160 * 60)); // Assuming 160 working hours per month
+    // Estimate number of agents needed (assuming 160 working hours per month)
+    const agentsNeeded = Math.ceil(minutesPerMonth / (160 * 60));
 
     return {
       minutesPerMonth,
@@ -168,18 +198,10 @@ export const SurveyModal = ({ isOpen, onClose }: SurveyModalProps) => {
         onClose();
       } else {
         setIsSubmitting(false);
-        setSubmitError(
-          result.error ||
-            'An error occurred while submitting the survey. Please try again.'
-        );
         // Handle error here if needed
       }
-    } catch (error) {
-      console.error('Error submitting survey:', error);
+    } catch {
       setIsSubmitting(false);
-      setSubmitError(
-        'An error occurred while submitting the survey. Please try again.'
-      );
       // Handle error here if needed
     }
   };
@@ -315,24 +337,22 @@ export const SurveyModal = ({ isOpen, onClose }: SurveyModalProps) => {
                         </div>
                       </div>
 
-                      {submitError && (
-                        <p className="text-sm text-red-500">{submitError}</p>
-                      )}
-
                       <div className="flex justify-between">
-                        <button
-                          onClick={() => setEstimation(null)}
-                          className="rounded-lg border border-gray-700 bg-gray-800 px-6 py-2 text-white hover:bg-gray-700"
-                        >
-                          Back
-                        </button>
-                        <button
-                          onClick={handleSubmit}
-                          disabled={isSubmitting}
-                          className="rounded-lg bg-gradient-to-r from-purple-600 to-blue-500 px-6 py-2 text-white hover:opacity-90 disabled:opacity-50"
-                        >
-                          {isSubmitting ? 'Submitting...' : 'Submit'}
-                        </button>
+                        <div className="flex justify-between">
+                          <button
+                            onClick={() => setEstimation(null)}
+                            className="rounded-lg border border-gray-700 bg-gray-800 px-6 py-2 text-white hover:bg-gray-700"
+                          >
+                            Back
+                          </button>
+                          <button
+                            onClick={handleSubmit}
+                            disabled={isSubmitting}
+                            className="rounded-lg bg-gradient-to-r from-purple-600 to-blue-500 px-6 py-2 text-white hover:opacity-90 disabled:opacity-50"
+                          >
+                            {isSubmitting ? 'Submitting...' : 'Submit'}
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ) : (
